@@ -1,0 +1,8 @@
+pandas>=2.0
+numpy>=1.24
+matplotlib>=3.7
+pillow>=10.0
+scikit-learn>=1.3
+tqdm>=4.65
+pyarrow>=14.0        # parquet cache for the image-path index (optional)
+kagglehub>=0.3       # only needed for tools/download_data.py
