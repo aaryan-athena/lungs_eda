@@ -7,8 +7,9 @@ reads its tables rather than re-deriving anything:
 """
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
-import pandas as pd
 import torch
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
@@ -16,9 +17,16 @@ from torchvision import transforms
 
 from . import config as C
 
+if TYPE_CHECKING:
+    import pandas as pd
+
 
 def load_frame() -> pd.DataFrame:
     """Metadata joined to the split assignment, with usable image paths."""
+    # Imported here, not at module level: the web app uses build_transforms
+    # only, and pandas would cost it ~40 MB of a 512 MB hosting budget.
+    import pandas as pd
+
     for p in (C.METADATA_TABLE, C.SPLIT_TABLE):
         if not p.exists():
             raise FileNotFoundError(f"{p} not found - run `python run_eda.py` first.")

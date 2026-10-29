@@ -11,8 +11,6 @@ import os
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
 
-import pandas as pd
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 # Same env override the EDA uses, so both halves of the project agree.
@@ -115,6 +113,8 @@ def load_pos_weight(cap: float) -> list[float]:
         raise FileNotFoundError(
             f"{PREVALENCE_TABLE} not found - run `python run_eda.py` first."
         )
+    import pandas as pd  # training-only; keeps the web app free of pandas
+
     tbl = pd.read_csv(PREVALENCE_TABLE).set_index("label")
     return [float(min(tbl.loc[c, "pos_weight"], cap)) for c in PATHOLOGIES]
 
