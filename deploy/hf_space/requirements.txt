@@ -1,0 +1,7 @@
+# torch / torchvision are installed separately in the Dockerfile (CPU index).
+fastapi==0.141.1
+uvicorn==0.52.4
+python-multipart==0.0.32
+pillow==12.3.0
+numpy==2.3.5
+pandas==3.0.3

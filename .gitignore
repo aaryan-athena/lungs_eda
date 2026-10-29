@@ -18,3 +18,10 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 .venv/
+
+# Hugging Face Space build output (tools/build_hf_space.py)
+dist/
+
+# training runs and copied-over results (checkpoints, metrics, EDA outputs)
+runs/
+new_results/

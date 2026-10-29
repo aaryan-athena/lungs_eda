@@ -286,7 +286,69 @@ These come out of the report with your dataset's actual numbers filled in:
 
 ---
 
-## 7. Licence / use note
+## 7. Web demo (upload + Grad-CAM)
+
+A FastAPI app in [webapp/](webapp/) serves a landing page and an analyzer
+that scores an uploaded X-ray for all 14 findings and overlays a Grad-CAM
+heatmap per finding.
+
+```powershell
+pip install -r webapp/requirements.txt
+python -m webapp.server                      # http://127.0.0.1:8000
+python -m webapp.server --checkpoint runs/densenet121_320/best.pt --port 8080
+```
+
+- Preprocessing reuses `chest_train.data.build_transforms` with the
+  checkpoint's saved config, so uploads are seen exactly as validation was.
+- Thresholds and metrics are read from `val_metrics.json` next to the
+  checkpoint. If `test_metrics.json` exists (`python evaluate.py ...`), the
+  landing page shows test metrics instead.
+- Uploads are processed in memory and never written to disk. The server binds
+  to `127.0.0.1` by default; pass `--host 0.0.0.0` to expose it on a network.
+- API: `GET /api/model`, `POST /api/predict` (multipart `file`); docs at
+  `/api/docs`.
+
+### Deploying to Hugging Face Spaces
+
+[tools/build_hf_space.py](tools/build_hf_space.py) assembles everything the
+Space needs into `dist/hf_space/`: the Dockerfile and Space README from
+[deploy/hf_space/](deploy/hf_space/), `webapp/`, `src/chest_train/`, and a
+slimmed model (weights only, 28 MB instead of 84 MB) with its
+`val_metrics.json`.
+
+**First deploy**
+
+1. On huggingface.co: **New Space** → SDK **Docker** → **Blank** template →
+   hardware **CPU basic (free)**. Then create an access token with **write**
+   permission (Settings → Access Tokens).
+2. Clone the empty Space into `dist/hf_space` and build into it:
+   ```powershell
+   git lfs install
+   Remove-Item -Recurse -Force dist\hf_space -ErrorAction SilentlyContinue
+   git clone https://huggingface.co/spaces/<username>/<space-name> dist\hf_space
+   python tools\build_hf_space.py            # or --checkpoint runs\<run>\best.pt
+   ```
+3. Push (username = your HF username, password = the token):
+   ```powershell
+   cd dist\hf_space
+   git add .
+   git commit -m "Deploy LungLens"
+   git push
+   ```
+4. The Space builds the image (about 5–10 minutes the first time) and then
+   serves at `https://huggingface.co/spaces/<username>/<space-name>`.
+
+**Updating** (new model or app changes): run `python tools\build_hf_space.py`
+again. It keeps `dist\hf_space\.git`, so just commit and push from there.
+
+Free Spaces sleep after about 48 hours without traffic; the next visit wakes
+them in about a minute. To show test-set metrics on the landing page, run
+`evaluate.py` on the checkpoint first; the build copies `test_metrics.json`
+when it exists.
+
+---
+
+## 8. Licence / use note
 
 ChestX-ray14 is released by the NIH Clinical Center for research use; the
 images are de-identified but the terms on the Kaggle page still apply. The
